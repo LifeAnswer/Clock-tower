@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>钟楼谜团 - 剧本工坊</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- 新增 Pinyon Script (花体) 和 Cinzel Decorative (装饰体) -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Noto+Serif+SC:wght@400;600;900&family=Pinyon+Script&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+</head>
+<body>
+    <!-- 侧边栏“展开”按钮 (默认隐藏，只有收起时才显示) -->
+    <div class="sidebar-open-trigger" onclick="toggleSidebar()" title="展开菜单">
+        <i class="fas fa-angle-double-right"></i>
+    </div>
+
+    <!-- 左侧栏 -->    
+    <aside class="sidebar-left">
+        <!-- 侧边栏“收起”按钮 (位于左侧栏右上角) -->
+        <div class="sidebar-close-btn" onclick="toggleSidebar()" title="收起菜单">
+            <i class="fas fa-angle-double-left"></i>
+        </div>
+        <div class="logo-area">
+            <h2>Blood <small>on the</small> Clocktower</h2>
+        </div>
+
+        <!-- 左侧栏三个菜单 -->
+        <div class="tabs-nav">
+            <!-- Tab 1: 官方角色库 -->
+            <button class="tab-btn active" onclick="switchTab('official')" title="Official Roles">
+                <i class="fas fa-book"></i> OFFICIAL
+            </button>
+            <!-- Tab 2: 自定义角色库 -->
+            <button class="tab-btn" onclick="switchTab('custom-lib')" title="My Custom Roles">
+                <i class="fas fa-user-tag"></i> MY ROLES
+            </button>
+            <!-- Tab 3: 自定义角色录入表单 -->
+            <button class="tab-btn" onclick="switchTab('create')" title="Create New">
+                <i class="fas fa-pen-nib"></i> CREATE
+            </button>
+        </div>
+
+        <!-- 面板 1: 官方角色库 -->
+        <div id="panel-official" class="tab-content active">
+            <div class="search-wrapper">
+                <input type="text" id="search-official" placeholder="Search Official..." oninput="filterLibrary('official')">
+            </div>
+
+            <div class="library-scroll-area">
+                <!-- 镇民 -->
+                <div class="lib-group" data-team="townsfolk">
+                    <div class="lib-group-header" onclick="toggleGroup(this)">
+                        <span>TOWNSFOLK</span> <i class="fas fa-chevron-down arrow"></i>
+                    </div>
+                    <div id="list-official-townsfolk" class="lib-list-container"></div>
+                </div>
+                
+                <!-- 外来者 -->
+                <div class="lib-group" data-team="outsider">
+                    <div class="lib-group-header" onclick="toggleGroup(this)">
+                        <span>OUTSIDERS</span> <i class="fas fa-chevron-down arrow"></i>
+                    </div>
+                    <div id="list-official-outsider" class="lib-list-container"></div>
+                </div>
+
+                <!-- 爪牙 -->
+                <div class="lib-group" data-team="minion">
+                    <div class="lib-group-header" onclick="toggleGroup(this)">
+                        <span>MINIONS</span> <i class="fas fa-chevron-down arrow"></i>
+                    </div>
+                    <div id="list-official-minion" class="lib-list-container"></div>
+                </div>
+
+                <!-- 恶魔 -->
+                <div class="lib-group" data-team="demon">
+                    <div class="lib-group-header" onclick="toggleGroup(this)">
+                        <span>DEMONS</span> <i class="fas fa-chevron-down arrow"></i>
+                    </div>
+                    <div id="list-official-demon" class="lib-list-container"></div>
+                </div>
+
+                <!-- 传奇角色 -->
+                <div class="lib-group" data-team="fabled">
+                    <div class="lib-group-header" onclick="toggleGroup(this)">
+                        <span>FABLED</span> <i class="fas fa-chevron-down arrow"></i>
+                    </div>
+                    <div id="list-official-fabled" class="lib-list-container"></div>
+                </div>
+
+                <!-- 奇遇角色 -->
+                <div class="lib-group" data-team="loric">
+                    <div class="lib-group-header" onclick="toggleGroup(this)">
+                        <span>LORIC</span> <i class="fas fa-chevron-down arrow"></i>
+                    </div>
+                    <div id="list-official-loric" class="lib-list-container"></div>
+                </div>
+            </div>
+            
+            <button class="btn-reset" onclick="loadPresets()"><i class="fas fa-sync"></i> Reload Official</button>
+        </div>
+
+        <!-- 面板 2: 自定义角色库 -->
+        <div id="panel-custom-lib" class="tab-content">
+            <div class="search-wrapper">
+                <input type="text" id="search-custom" placeholder="Search My Roles..." oninput="filterLibrary('custom')">
+            </div>
+
+            <div class="library-scroll-area">
+                <!-- 结构同上 -->
+                <div class="lib-group" data-team="townsfolk">
+                    <div class="lib-group-header" onclick="toggleGroup(this)">
+                        <span>TOWNSFOLK</span> <i class="fas fa-chevron-down arrow"></i>
+                    </div>
+                    <div id="list-custom-townsfolk" class="lib-list-container"></div>
+                </div>
+
+                <div class="lib-group" data-team="outsider">
+                    <div class="lib-group-header" onclick="toggleGroup(this)">
+                        <span>OUTSIDERS</span> <i class="fas fa-chevron-down arrow"></i>
+                    </div>
+                    <div id="list-custom-outsider" class="lib-list-container"></div>
+                </div>
+
+                <div class="lib-group" data-team="minion">
+                    <div class="lib-group-header" onclick="toggleGroup(this)">
+                        <span>MINIONS</span> <i class="fas fa-chevron-down arrow"></i>
+                    </div>
+                    <div id="list-custom-minion" class="lib-list-container"></div>
+                </div>
+
+                <div class="lib-group" data-team="demon">
+                    <div class="lib-group-header" onclick="toggleGroup(this)">
+                        <span>DEMONS</span> <i class="fas fa-chevron-down arrow"></i>
+                    </div>
+                    <div id="list-custom-demon" class="lib-list-container"></div>
+                </div>
+
+                <div class="lib-group" data-team="fabled">
+                    <div class="lib-group-header" onclick="toggleGroup(this)">
+                        <span>FABLED</span> <i class="fas fa-chevron-down arrow"></i>
+                    </div>
+                    <div id="list-custom-fabled" class="lib-list-container"></div>
+                </div>
+
+                <div class="lib-group" data-team="loric">
+                    <div class="lib-group-header" onclick="toggleGroup(this)">
+                        <span>LORIC</span> <i class="fas fa-chevron-down arrow"></i>
+                    </div>
+                    <div id="list-custom-loric" class="lib-list-container"></div>
+                </div>
+                
+                <div id="custom-empty-msg" style="text-align:center; color:#666; padding:20px; font-size:12px; display:none;">
+                    No custom roles yet.<br>Go to "CREATE" tab to add one.
+                </div>
+            </div>
+        </div>
+
+        <!-- 面板 3: 自定义角色 -->
+        <div id="panel-create" class="tab-content">
+            <div class="custom-form">
+                <h3>Create Character</h3>
+                <br>
+                <!-- 1. Name & English Name (用于生成ID) -->
+                <div class="form-group">
+                    <input type="text" id="in-name" placeholder="角色名称 (Name)">
+                    <input type="text" id="in-name-en" placeholder="English Name (用于生成ID)">
+                </div>
+                
+                <!-- 2. Team & Image -->
+                <div class="row">
+                    <select id="in-team">
+                        <option value="townsfolk">Townsfolk (镇民)</option>
+                        <option value="outsider">Outsider (外来者)</option>
+                        <option value="minion">Minion (爪牙)</option>
+                        <option value="demon">Demon (恶魔)</option>
+                        <option value="fabled">Fabled (传奇)</option>
+                        <option value="loric">Loric (奇遇)</option>
+                    </select>
+                    <label class="file-btn">
+                        Upload Icon <input type="file" id="in-image" accept="image/*" hidden>
+                    </label>
+                </div>
+                
+                <!-- 图片预览 -->
+                <div class="preview-row" id="preview-box" style="display:none;">
+                    <img id="img-preview" src=""> <span>Image Selected</span>
+                </div>
+
+                <!-- 3. Ability -->
+                <textarea id="in-ability" rows="3" placeholder="角色能力描述 (Ability)..."></textarea>
+                
+                <!-- 4. Night Order -->
+                <div class="row">
+                    <input type="number" id="in-first" placeholder="首夜顺位 (First Night)">
+                    <input type="number" id="in-other" placeholder="其他夜顺位 (Other Night)">
+                </div>
+
+                <!-- 5. Reminder Tokens -->
+                <input type="text" id="in-reminder" placeholder="提示标记 (Reminder tokens, 用逗号分隔)">
+
+                <!-- 6. Setup -->
+                <div class="setup-switch-row">
+                    <input type="checkbox" id="in-setup">
+                    <label for="in-setup">涉及设置调整 (Affects Setup)</label>
+                </div>
+
+                <button class="btn-add-custom" onclick="createRoleToLibrary()">+ Save to Custom Libiary</button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main class="main-canvas">
+        <div id="script-paper" class="paper-sheet">
+
+            <!-- 角色区 -->
+            <div class="paper-content">
+                <!-- 标题区 -->
+                <header class="script-header">
+                    <h1 id="script-title-edit" contenteditable="true">Script Name</h1>
+                    <p id="script-author-edit" contenteditable="true">by Author</p>
+                </header>
+
+                <!-- 镇民 -->
+                <div class="script-section" id="section-townsfolk">
+                    <div class="section-header type-blue" onclick="jumpToCategory('townsfolk')">
+                        <span class="header-title">TOWNSFOLK</span>
+                    </div>
+                    <div class="role-grid" id="grid-townsfolk">
+                        <div class="empty-placeholder" onclick="jumpToCategory('townsfolk')">+ Add Townsfolk</div>
+                    </div>
+                </div>
+
+                <!-- 外来者 -->
+                <div class="script-section" id="section-outsider">
+                    <div class="section-header type-teal" onclick="jumpToCategory('outsider')">
+                        <span class="header-title">OUTSIDERS</span>
+                    </div>
+                    <div class="role-grid" id="grid-outsider">
+                        <div class="empty-placeholder" onclick="jumpToCategory('outsider')">+ Add Outsider</div>
+                    </div>
+                </div>
+                
+                <!-- 爪牙 -->
+                <div class="script-section" id="section-minion">
+                    <div class="section-header type-orange" onclick="jumpToCategory('minion')">
+                        <span class="header-title">MINIONS</span>
+                    </div>
+                    <div class="role-grid" id="grid-minion">
+                        <div class="empty-placeholder" onclick="jumpToCategory('minion')">+ Add Minion</div>
+                    </div>
+                </div>
+
+                <!-- 恶魔 -->
+                <div class="script-section" id="section-demon">
+                    <div class="section-header type-red" onclick="jumpToCategory('demon')">
+                        <span class="header-title">DEMONS</span>
+                    </div>
+                    <div class="role-grid" id="grid-demon">
+                        <div class="empty-placeholder" onclick="jumpToCategory('demon')">+ Add Demon</div>
+                    </div>
+                </div>
+
+                <!-- 传奇角色 -->
+                <div class="script-section" id="section-fabled" style="display:none;">
+                    <div class="section-header type-yellow" onclick="jumpToCategory('fabled')">
+                        <span class="header-title">FABLED</span>
+                    </div>
+                    <div class="role-grid single-col" id="grid-fabled"></div>
+                </div>
+
+                <!-- 奇遇角色 -->
+                <div class="script-section" id="section-loric" style="display:none;">
+                    <div class="section-header type-green" onclick="jumpToCategory('loric')">
+                        <span class="header-title">LORIC</span>
+                    </div>
+                    <div class="role-grid single-col" id="grid-loric"></div>
+                </div>
+                
+                <!-- 相克规则 -->
+                <div class="jinx-area" id="jinx-area" style="display:none;">
+                    <div class="jinx-header">
+                        <span class="jinx-title">JINXES</span>
+                    </div>
+                    <div class="jinx-list" id="jinx-list">
+                        <!-- 这里的条目将由 JS 自动生成 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 夜间行动列表 -->
+            <div class="night-sidebar">
+                <div class="night-group"><div class="night-badge">FIRST</div><div id="night-first-col" class="night-icons"></div></div>
+                <div class="night-divider"></div>
+                <div class="night-group"><div class="night-badge">OTHER</div><div id="night-other-col" class="night-icons"></div></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 右侧工具栏 -->
+    <aside class="sidebar-right-tools">
+
+        <!-- 快速添加角色 -->
+        <div id="qs-trigger-btn" class="tool-btn" onclick="toggleQuickSearch(event)" title="快速添加角色">
+            <i class="fas fa-plus"></i>
+        </div>
+        
+        <!-- 英文名显示/隐藏按钮 -->
+        <div class="tool-btn" onclick="toggleEnglishNames()" title="显示/隐藏角色英文名">
+            <i class="fas fa-font"></i>
+        </div>
+
+        <!-- 锁定/解锁拖动排序按钮 -->
+        <div id="lock-sort-btn" class="tool-btn" onclick="toggleSortLock()" title="锁定排序">
+            <i class="fas fa-lock-open"></i>
+        </div>
+
+        <!-- 自定义相克规则按钮  -->
+        <div class="tool-btn" onclick="openJinxModal()" title="添加自定义相克规则">
+            <i class="fas fa-link"></i>
+        </div>
+
+
+        <div class="spacer"></div>
+
+        <!-- 导出图片&清空剧本 -->
+        <div class="tool-btn export-btn" onclick="exportImage()" title="导出图片"><i class="fas fa-file-export"></i></div>
+        <div class="tool-btn delete-btn" onclick="clearScript()" title="清空剧本"><i class="fas fa-trash-alt"></i></div>
+    </aside>
+
+    <!-- 快速添加角色搜索框结构 -->
+    <div id="quick-search-panel" class="qs-panel">
+        <div class="qs-header">
+            <i class="fas fa-search"></i>
+            <input type="text" id="qs-input" placeholder="输入角色名..." autocomplete="off">
+            <div class="qs-close-btn" onclick="closeQuickSearch()"><i class="fas fa-times"></i></div>
+        </div>
+        <div id="qs-results" class="qs-results-list">
+            <div class="qs-empty-tip">搜索结果将显示在这里</div>
+        </div>
+    </div>
+
+    <!-- 添加自定义相克规则的弹窗 UI -->
+    <div id="jinx-modal" class="custom-modal">
+        <div class="modal-content">
+            <h3><i class="fas fa-link"></i> 自定义相克规则</h3>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>角色 1 (Role A)</label>
+                    <select id="jinx-role-a"></select>
+                </div>
+                <div class="form-group">
+                    <label>角色 2 (Role B)</label>
+                    <select id="jinx-role-b"></select>
+                </div>
+                <div class="form-group">
+                    <label>相克规则描述 (Description)</label>
+                    <textarea id="jinx-desc" rows="4" placeholder="输入两者之间的冲突或联动规则..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeJinxModal()">Cancel</button>
+                <button class="btn-save" onclick="saveCustomJinx()">Save Jinx</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="jinx.js"></script>
+    <script src="script.js"></script>
+    <script src="roles_data.js"></script>
+</body>
+</html>

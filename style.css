@@ -1,0 +1,1059 @@
+/* =========================================
+   1. 基础变量与全局设置
+   ========================================= */
+:root {
+    --bg-deep-purple: #2a1a35;
+    --text-light: #e0e0e0;
+    --accent-gold: #c5a059;
+    
+    /* 核心修改：更亮、更暖的羊皮纸背景色，接近图1 */
+    --paper-bg: #fcfdf7; 
+    
+    /* 渐变色定义 (参考图2) */
+    --grad-blue: linear-gradient(90deg, #104e8b 0%, #4682b4 100%);     /* 镇民 */
+    --grad-teal: linear-gradient(90deg, #008080 0%, #20b2aa 100%);     /* 外来者 */
+    --grad-orange: linear-gradient(90deg, #b03060 0%, #d2691e 100%);   /* 爪牙 */
+    --grad-red: linear-gradient(90deg, #8b0000 0%, #b22222 100%);      /* 恶魔 */
+    --grad-yellow: linear-gradient(90deg, #d4ac0d 0%, #f1c40f 100%);   /* Fabled */
+    --grad-green: linear-gradient(90deg, #2e8b57 0%, #3cb371 100%);    /* Loric */
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { display: flex; height: 100vh; font-family: "Noto Serif SC", serif; overflow: hidden; background: #444; }
+
+.sidebar-close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: 0.2s;
+    z-index: 20; /* 确保在 Logo 之上 */
+}
+.sidebar-close-btn:hover {
+    background: rgba(255,255,255,0.1);
+    color: var(--accent-gold);
+}
+.sidebar-open-trigger {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    width: 40px;
+    height: 40px;
+    background: var(--bg-deep-purple); /* 与侧边栏同色 */
+    color: var(--accent-gold);
+    border-radius: 50%;
+    display: none; /* 默认隐藏 */
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 2px 2px 8px rgba(0,0,0,0.5);
+    border: 2px solid #444;
+    z-index: 100; /* 最顶层 */
+    transition: transform 0.2s;
+}
+
+.sidebar-open-trigger:hover {
+    transform: scale(1.1);
+    background: #332040;
+}
+
+/* --- 状态切换逻辑 --- */
+
+/* 当 body 有 sidebar-collapsed 类时： */
+
+/* 1. 左侧栏收起 (原有逻辑) */
+body.sidebar-collapsed .sidebar-left {
+    width: 0;
+    opacity: 0;
+    padding: 0;
+    border-right-width: 0;
+}
+
+/* 2. 显示外部“展开”按钮 */
+body.sidebar-collapsed .sidebar-open-trigger {
+    display: flex;
+    animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+/* ... (左侧栏 Sidebar 样式保持不变，此处省略以节省空间) ... */
+.sidebar-left {position: relative; width: 420px; background-color: var(--bg-deep-purple); background-image: url("https://www.transparenttextures.com/patterns/black-scales.png"); display: flex; flex-direction: column; border-right: 4px solid #111; z-index: 10; box-shadow: 5px 0 15px rgba(0,0,0,0.5); color: var(--text-light); }
+.logo-area { padding: 25px 20px; text-align: center; background: rgba(0,0,0,0.3); border-bottom: 1px solid #444; }
+.logo-area h2 { font-family: 'Cinzel', serif; color: var(--accent-gold); font-size: 25px; letter-spacing: 2px; }
+.tabs-nav { display: flex; background: #1a0f22; }
+.tab-btn { flex: 1; padding: 10px 5px; background: transparent; border: none; color: #888; font-family: 'Cinzel', serif; cursor: pointer; font-weight: bold; border-bottom: 3px solid transparent; transition: 0.3s; height: 55px;font-size: 14px;}
+.tab-btn.active { color: var(--accent-gold); background: #332040; border-bottom-color: var(--accent-gold); }
+.tab-content { flex: 1; display: none; flex-direction: column; overflow: hidden; }
+.tab-content.active { display: flex; }
+.search-wrapper { padding: 12px 15px; background: #332040; display: flex; gap: 5px; border-bottom: 1px solid #444; }
+.search-wrapper input { flex: 1; padding: 10px 12px; border: 1px solid #555; background: #eee; color: #222; border-radius: 2px; font-size: 14px;}
+.library-scroll-area { flex: 1; overflow-y: auto; padding: 10px; }
+.lib-group-header {
+    /* 保持原有字体样式，增加布局属性 */
+    font-family: 'Cinzel', serif; color: #888; font-size: 18px;
+    margin: 10px 0 0 0; 
+    border-bottom: 1px solid #555;
+    padding: 12px 10px;
+    
+    /* 新增：可点击、Flex布局 */
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.2s, color 0.2s;
+}
+
+/* 针对左侧栏分类标题 (TOWNSFOLK, OUTSIDERS 等) 的文字样式优化 */
+.lib-group-header span {
+    font-weight: 900;          /* 使用 900 极粗体，让英文字母非常醒目 */
+    font-size: 16px;           /* 稍微调大字号以匹配加宽的侧边栏 */
+    letter-spacing: 2px;       /* 增加字母间距，提升高级感和史诗感 */
+    color: #bbb;               /* 将默认的暗灰色调亮一点，让加粗效果更明显 */
+}
+/* =========================================
+   为左侧栏分类标题赋予对应的阵营主题色
+   ========================================= */
+
+/* 镇民 (Townsfolk) - 蓝色 */
+.lib-group[data-team="townsfolk"] .lib-group-header span { 
+    color: #4c79e9; 
+}
+/* 外来者 (Outsider) - 青/蓝绿色 */
+.lib-group[data-team="outsider"] .lib-group-header span { 
+    color: #7fdbd4; 
+}
+/* 爪牙 (Minion) - 橙/赤色 */
+.lib-group[data-team="minion"] .lib-group-header span { 
+    color: #ff854c; 
+}
+/* 恶魔 (Demon) - 红色 */
+.lib-group[data-team="demon"] .lib-group-header span { 
+    color: #f90000; 
+}
+/* 传奇角色 (Fabled) - 金黄色 */
+.lib-group[data-team="fabled"] .lib-group-header span { 
+    color: #f1c40f; 
+}
+/* 奇遇角色 (Loric) - 绿色 */
+.lib-group[data-team="loric"] .lib-group-header span { 
+    color: #77dd77; 
+}
+
+/* --- 进阶视觉优化：鼠标悬浮时发光效果 --- */
+/* 因为我们给了特定颜色，原先 hover 变金色的效果会被覆盖 */
+/* 这里我们修改为：鼠标放上去时，字体变白，并散发对应颜色的发光阴影，互动感拉满 */
+.lib-group[data-team="townsfolk"] .lib-group-header:hover span {
+    color: #ffffff; text-shadow: 0 0 8px #8bbadd;
+}
+.lib-group[data-team="outsider"] .lib-group-header:hover span {
+    color: #ffffff; text-shadow: 0 0 8px #7fdbd4;
+}
+.lib-group[data-team="minion"] .lib-group-header:hover span {
+    color: #ffffff; text-shadow: 0 0 8px #eaa483;
+}
+.lib-group[data-team="demon"] .lib-group-header:hover span {
+    color: #ffffff; text-shadow: 0 0 8px #e59393;
+}
+.lib-group[data-team="fabled"] .lib-group-header:hover span {
+    color: #ffffff; text-shadow: 0 0 8px #f1c40f;
+}
+.lib-group[data-team="loric"] .lib-group-header:hover span {
+    color: #ffffff; text-shadow: 0 0 8px #77dd77;
+}
+
+/* 确保鼠标悬浮或点击时，文字依然能变成金色 */
+.lib-group-header:hover span {
+    color: var(--accent-gold);
+}
+
+.lib-group-header:hover {
+    color: var(--accent-gold);
+    background: rgba(255,255,255,0.05);
+    
+}
+
+/* 专门针对角色列表中的文字（角色名）进行放大和加粗 */
+.lib-item span {
+    font-size: 18px;          /* 字体放大，推荐 17px ~ 18px */
+    font-weight: 600;         /* 稍微加粗，使其在更大的背景区块中不显得单薄 */
+    color: #222;              /* 颜色加深一点点，提升阅读的对比度 */
+    letter-spacing: 1px;      /* 增加一点字间距，让排版显得更大气 */
+    
+    /* 防止名字太长换行破坏布局，超出部分显示省略号 */
+    white-space: nowrap;      
+    overflow: hidden;         
+    text-overflow: ellipsis;  
+    flex: 1;                  /* 让文字占据剩余空间，保证右侧的打勾图标不会跑偏 */
+}
+
+/* 箭头动画 */
+.lib-group-header .arrow {
+    transition: transform 0.3s ease;
+    font-size: 10px;
+}
+.lib-list-container {
+    display: flex; flex-direction: column; gap: 4px;
+    /* 动画关键：利用 max-height 实现滑落效果 */
+    max-height: 2000px; /* 给一个足够大的值 */
+    overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
+    opacity: 1;
+    margin-top: 5px;
+
+}
+/* --- 折叠状态 (.collapsed) --- */
+.lib-group.collapsed .lib-list-container {
+    max-height: 0;
+    opacity: 0;
+    margin-top: 0;
+}
+
+.lib-group.collapsed .lib-group-header .arrow {
+    transform: rotate(-90deg); /* 箭头旋转 */
+}
+.lib-item { display: flex; align-items: center; padding: 10px 15px; background: #e6dac8; color: #333; border-radius: 2px; cursor: pointer; border-left: 4px solid transparent; transition: 0.2s; font-family: "Noto Serif SC", sans-serif; position: relative; font-size: 15px; margin-bottom: 2px;}
+.lib-item:hover { transform: translateX(5px); background: #fff; }
+.lib-item.selected { background: #fff; border-left-color: var(--accent-gold); box-shadow: 0 0 10px rgba(197, 160, 89, 0.5); }
+.lib-item img { width: 36px; height: 36px; margin-right: 15px; border-radius: 0; }
+.lib-item .check-mark { position: absolute; right: 15px; color: green; display: none; right: 15px;}
+.lib-item.selected .check-mark { display: block; }
+.btn-reset { padding: 15px; background: #3d2c4d; color: #ccc; border: none; border-top: 1px solid #555; cursor: pointer; }
+.custom-form { padding: 20px; overflow-y: auto; }
+.custom-form input, .custom-form select, .custom-form textarea { width: 100%; padding: 8px; margin-bottom: 10px; background: #eee; border: none; border-radius: 2px; }
+.row { display: flex; gap: 10px; }
+.file-btn { flex: 1; background: #555; color: #fff; text-align: center; padding: 8px; cursor: pointer; font-size: 12px; margin-bottom: 10px; border-radius: 2px; }
+.btn-add-custom { width: 100%; padding: 10px; background: var(--accent-gold); border: none; font-weight: bold; cursor: pointer; margin-top: 10px; }
+.preview-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; color: #aaa; font-size: 12px; }
+.preview-row img { width: 30px; height: 30px; border-radius: 50%; }
+
+/* =========================================
+   3. 中间剧本画布 (核心修改区域)
+   ========================================= */
+.main-canvas {
+    flex: 1; background: #666; overflow: auto;
+    padding: 40px; display: flex; justify-content: center;
+}
+
+.paper-sheet {
+    width: 900px; min-height: 1000px; height: fit-content;
+    background-color: var(--paper-bg);
+    /* 图1风格：非常淡雅的羊皮纸纹理 */
+    background-image: url('https://www.transparenttextures.com/patterns/natural-paper.png'); 
+    position: relative;
+    display: flex;
+    box-shadow: 0 0 60px rgba(0,0,0,0.6);
+}
+
+/* 图1风格：背景更加干净，减少旧化，增加质感 */
+.paper-pattern {
+    position: absolute; inset: 0; pointer-events: none;
+    background-image: url('https://www.transparenttextures.com/patterns/cream-paper.png');
+    opacity: 0.5;
+    mix-blend-mode: multiply;
+}
+
+.paper-content {
+    flex: 1; padding: 60px 50px 60px 70px; /* 增加留白 */
+    display: flex; flex-direction: column; z-index: 1;
+}
+
+/* --- 核心修改：花式标题 --- */
+.script-header {
+    margin-bottom: 40px; 
+    border-left: none; /* 去除原本的黑线，图1没有 */
+    padding-left: 0;
+}
+.script-header h1 {
+    /* 使用 Pinyon Script 实现“花式写法” */
+    font-family: 'Pinyon Script', cursive; 
+    font-size: 64px; /* 字号加大 */
+    color: #2c3e50; 
+    margin: 0;
+    line-height: 1.2;
+    text-shadow: 1px 1px 0px rgba(0,0,0,0.1);
+}
+.script-header p {
+    font-family: 'Cinzel', serif; /* 作者名保持衬线体 */
+    font-style: normal; 
+    color: #666; 
+    font-size: 16px;
+    margin-top: 5px;
+    letter-spacing: 2px; /* 增加字间距 */
+}
+
+/* --- 核心修改：渐变标题 --- */
+.section-header {
+    display: flex; align-items: baseline;
+    margin-bottom: 10px;
+    cursor: pointer;
+    border-bottom: 1px solid #d0d0d0; /* 极细的分割线 */
+    padding-bottom: 6px;
+    position: relative;
+}
+
+.header-title {
+    font-family: 'Cinzel', serif; 
+    font-size: 20px; 
+    font-weight: 800; 
+    letter-spacing: 1px;
+    
+    /* 这里是网页显示的样式 */
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent; 
+    
+    /* 关键：给一个默认颜色，防止 JS 切换时闪烁 */
+    transition: 0s; /* 导出时不需要过渡动画 */
+}
+
+/* 应用渐变变量 */
+.type-blue .header-title { background-image: var(--grad-blue); }
+.type-blue { border-bottom-color: #8bbadd; } /* 线条颜色匹配 */
+
+.type-teal .header-title { background-image: var(--grad-teal); }
+.type-teal { border-bottom-color: #7fdbd4; }
+
+.type-orange .header-title { background-image: var(--grad-orange); }
+.type-orange { border-bottom-color: #eaa483; }
+
+.type-red .header-title { background-image: var(--grad-red); }
+.type-red { border-bottom-color: #e59393; }
+
+.type-yellow .header-title { background-image: var(--grad-yellow); }
+.type-green .header-title { background-image: var(--grad-green); }
+
+
+/* --- 角色网格 (保持紧凑) --- */
+.role-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 25px;
+    margin-bottom: 30px;
+}
+.role-grid.single-col { grid-template-columns: 1fr; gap: 10px; }
+
+/* 角色卡片 (无框、大图标) */
+.script-role {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 6px 0; cursor: pointer; position: relative;
+}
+.script-role:hover { background: rgba(0,0,0,0.02); border-radius: 4px; }
+
+.script-role img {
+    width: 58px; height: 58px;
+    border-radius: 0; border: none; background: transparent; box-shadow: none;
+    filter: drop-shadow(2px 2px 3px rgba(0,0,0,0.3)); /* 真实投影 */
+    flex-shrink: 0; object-fit: contain;
+}
+.script-role:hover img { transform: scale(1.05); transition: 0.2s; }
+
+.script-role-info { padding-top: 4px; }
+.script-role-info h4 {
+    font-size: 17px; font-weight: 900; margin: 0 0 2px 0; color: #111; 
+    font-family: "Noto Serif SC", serif; line-height: 1.1;
+    display: flex; align-items: baseline; flex-wrap: wrap;
+}
+.role-en-name {
+    font-size: 13px; font-weight: normal; color: #777; margin-left: 8px; 
+    font-family: 'Cinzel', serif; opacity: 0.8;
+}
+.script-role-info p {
+    font-size: 13px; color: #444; margin: 0; line-height: 1.4; font-weight: 500;
+}
+
+/* 占位符 */
+.empty-placeholder {
+    grid-column: span 2; text-align: center; padding: 15px;
+    color: #999; font-family: 'Cinzel', sans-serif; cursor: pointer;
+    border: 1px dashed transparent;
+}
+.empty-placeholder:hover { color: var(--accent-gold); border-color: #ddd; background: rgba(255,255,255,0.3); }
+
+/* Jinx */
+.jinx-area {
+    margin-top: auto; padding-top: 15px; border-top: 1px solid #ccc;
+    color: #555; font-size: 13px; font-style: italic; line-height: 1.6;
+}
+
+/* 夜晚行动条 */
+.night-sidebar {
+    width: 90px; border-left: 2px dashed rgba(160, 160, 160, 0.4); /* 线条颜色变浅适配浅色背景 */
+    padding: 40px 10px; display: flex; flex-direction: column; align-items: center; z-index: 1;
+    background: rgba(0,0,0,0.01);
+}
+.night-group { margin-bottom: 30px; text-align: center; width: 100%; }
+.night-divider { width: 60%; height: 2px; background: #ccc; margin: 10px auto; }
+.night-icons { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.night-token {
+    width: 45px;          /* 稍微加大一点尺寸 */
+    height: 45px;
+    border-radius: 0;     /* 去除圆角 */
+    border: none;         /* 去除边框 */
+    box-shadow: none;     /* 去除盒子阴影 */
+    background: transparent; /* 去除背景 */
+    
+    /* 添加投影，使其与主剧本图标一致 */
+    filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.4));
+    
+    object-fit: contain;
+}
+
+/* 顺便调整一下徽章 (First/Other) 让它不要太突兀，可选 */
+.night-badge {
+    width: 40px; height: 40px;
+    background: #333; color: #fff; 
+    border: 1px solid #888; /* 减弱边框 */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    /* 保持其他属性不变 */
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-family: 'Cinzel', serif; font-size: 9px; margin: 0 auto 15px auto;
+}
+
+/* 右侧工具栏 */
+.sidebar-right-tools { width: 60px; background: #ddd; border-left: 1px solid #999; display: flex; flex-direction: column; align-items: center; padding: 20px 0; gap: 15px; z-index: 20; }
+.tool-btn { width: 40px; height: 40px; border-radius: 50%; background: #fff; color: #8b1f1f; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.2s; font-size: 18px; }
+.tool-btn:hover { background: var(--bg-deep-purple); color: #fff; transform: scale(1.1); }
+.spacer { flex: 1; }
+.export-btn { color: #27ae60; } .delete-btn { color: #c0392b; }
+
+.setup-switch-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    background: rgba(255,255,255,0.05);
+    padding: 10px;
+    border-radius: 4px;
+}
+
+.setup-switch-row input[type="checkbox"] {
+    width: auto; /*这也覆盖默认的 width: 100% */
+    margin: 0;
+    cursor: pointer;
+    transform: scale(1.2); /*稍微放大一点 */
+}
+
+.setup-switch-row label {
+    color: #ccc;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: 'Cinzel', sans-serif;
+}
+
+/* 调整输入框间距 */
+.form-group input {
+    margin-bottom: 10px;
+}
+
+/* --- 1. 夜间行动栏垂直居中修正 --- */
+
+/* 确保父容器允许子元素拉伸高度 */
+.paper-sheet {
+    /* 保持原有的 flex 布局 */
+    display: flex;
+    /* 关键：stretch 让左右两栏的高度始终保持一致（以高的一方为准） */
+    align-items: stretch; 
+    /* ...其他原有样式保持不变... */
+}
+
+.night-sidebar {
+    /* 保持原有样式 */
+    width: 90px;
+    border-left: 2px dashed rgba(160, 160, 160, 0.4);
+    padding: 40px 10px;
+    z-index: 1;
+    background: rgba(0,0,0,0.01);
+
+    /* --- 核心修改：垂直居中 --- */
+    display: flex;
+    flex-direction: column;
+    /* 主轴(垂直方向)居中 */
+    justify-content: center; 
+    /* 交叉轴(水平方向)居中 */
+    align-items: center;
+}
+
+/* 之前可能有 margin-bottom，为了完美居中，建议移除 .night-group 多余的 margin */
+.night-group:last-child {
+    margin-bottom: 0;
+}
+
+
+/* --- 2. 控制英文名显示的开关样式 --- */
+
+/* 当 script-paper 拥有 'hide-en' 类时，隐藏内部所有的英文名 */
+.paper-sheet.hide-en .role-en-name {
+    display: none !important;
+}
+
+/* --- 右上角悬浮搜索 (Quick Search) --- */
+
+.qs-panel {
+    position: fixed;
+    top: 20px;            /* 与右侧第一个按钮对齐 */
+    right: 80px;          /* 位于右侧工具栏左侧 (60px宽度 + 20px间距) */
+    width: 320px;         /* 宽度适中，不挡太多视野 */
+    max-height: 80vh;     /* 防止过长超出屏幕 */
+    
+    background: var(--bg-deep-purple); /* 保持深色风格 */
+    border: 1px solid #555;
+    border-radius: 8px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+    z-index: 9999;
+    
+    display: flex;
+    flex-direction: column;
+    
+    /* 动画效果 */
+    opacity: 0;
+    transform: translateX(20px); /* 从右边滑出来 */
+    pointer-events: none;        /* 隐藏时不可点击 */
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* 激活状态 */
+.qs-panel.active {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+}
+
+/* 头部搜索区 */
+.qs-header {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid #444;
+    background: rgba(0,0,0,0.2);
+    border-radius: 8px 8px 0 0;
+}
+
+.qs-header i.fa-search {
+    color: var(--accent-gold);
+    margin-right: 10px;
+    font-size: 14px;
+}
+
+.qs-header input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-family: "Noto Serif SC", serif;
+    font-size: 14px;
+    outline: none;
+}
+.qs-header input::placeholder { color: #666; font-style: italic; }
+
+.qs-close-btn {
+    cursor: pointer;
+    color: #666;
+    padding: 4px;
+}
+.qs-close-btn:hover { color: #fff; }
+
+/* 结果列表区 */
+.qs-results-list {
+    flex: 1;
+    overflow-y: auto; /* 内容过多时内部滚动 */
+    background: #22182b;
+    border-radius: 0 0 8px 8px;
+    min-height: 50px; /* 保证有个最小高度 */
+}
+
+/* 滚动条样式 */
+.qs-results-list::-webkit-scrollbar { width: 5px; }
+.qs-results-list::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+
+/* 单个条目样式 (更紧凑一点) */
+.qs-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    cursor: pointer;
+    transition: 0.1s;
+}
+
+.qs-item:hover {
+    background: rgba(197, 160, 89, 0.15);
+    border-left: 3px solid var(--accent-gold);
+}
+
+.qs-item.added { opacity: 0.5; }
+.qs-item.added::after {
+    content: "✔"; /* 简化为一个勾 */
+    color: #4caf50;
+    margin-left: auto;
+    font-weight: bold;
+}
+
+.qs-item img {
+    width: 28px; height: 28px;
+    margin-right: 10px;
+    filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.5));
+}
+
+.qs-info h4 { margin: 0; font-size: 14px; color: #eee; }
+.qs-info small { color: #888; font-size: 11px; }
+
+.qs-empty-tip { padding: 15px; text-align: center; color: #555; font-size: 12px; }
+
+.sortable-ghost {
+    opacity: 0.4;
+    background-color: rgba(197, 160, 89, 0.1);
+    border: 2px dashed var(--accent-gold);
+    border-radius: 6px;
+}
+
+/* 覆盖原本 script-role 的指针样式，提示用户这里不仅能点击还能拖拽 */
+.script-role {
+    cursor: grab; /* 变成张开的小手 */
+}
+
+/* 鼠标按住拖动时的状态 */
+.script-role:active {
+    cursor: grabbing; /* 变成握紧的小手 */
+}
+
+/* 修复拖拽图片时触发浏览器默认行为的问题 */
+.script-role img {
+    -webkit-user-drag: none; /* 防止浏览器把图片当成文件拖出网页 */
+    pointer-events: none;    /* 让鼠标事件穿透图片，直接作用于卡片容器 */
+}
+
+/* =========================================
+   响应式布局：当屏幕宽度小于 1450px 时自动微调，保持构图完美
+   ========================================= */
+@media (max-width: 1450px) {
+    /* 缩小主画布的灰色外围留白 */
+    .main-canvas {
+        padding: 20px; /* 原为 40px */
+    }
+    
+    /* 允许纸张在小屏幕下自适应缩小，而不是硬扛 900px */
+    .paper-sheet {
+        width: 100%;
+        max-width: 900px;
+    }
+    
+    /* 纸张内部的排版留白稍微缩小一点 */
+    .paper-content {
+        padding: 40px 30px 40px 50px; 
+    }
+}
+
+/* Firefox 的兼容写法 (细滚动条) */
+.library-scroll-area {
+    /* 关键修改：将 overflow-y 改为 scroll，强制无论内容多少都显示滚动条轨道 */
+    overflow-y: scroll !important; 
+    
+    /* Firefox 的兼容写法 */
+    scrollbar-width: thin;
+    scrollbar-color: #7a5c8f rgba(0, 0, 0, 0.3); 
+}
+
+/* Chrome, Edge, Safari 等 Webkit 内核浏览器的写法 */
+.library-scroll-area::-webkit-scrollbar {
+    width: 6px; 
+}
+
+/* 滚动条的轨道 (背景) - 常驻时稍微加深底色，增加凹槽的立体感 */
+.library-scroll-area::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3); 
+    border-radius: 4px;             
+}
+
+/* 滚动条的滑块 (拖动的部分) */
+.library-scroll-area::-webkit-scrollbar-thumb {
+    /* 颜色调亮一点点，确保常驻在深色背景上足够显眼 */
+    background: #7a5c8f;            
+    border-radius: 4px;             
+    transition: background 0.3s;    
+}
+
+/* 鼠标悬停在滑块上时的效果保持高亮主题色 */
+.library-scroll-area::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-gold); 
+}
+
+.custom-form {
+    padding: 25px 20px;
+}
+
+/* 1. 表单大标题优化 */
+.custom-form h3 {
+    font-family: 'Cinzel', serif;
+    color: var(--accent-gold);
+    text-align: center;
+    font-size: 24px;
+    letter-spacing: 2px;
+    margin-top: 0;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(197, 160, 89, 0.3); /* 金色下划线分割 */
+}
+
+/* 隐藏原本 HTML 里多余的 <br> 标签，用 Margin 控制间距更精准 */
+.custom-form h3 + br {
+    display: none;
+}
+
+/* 2. 输入框、下拉框、文本域统一高级质感 */
+.custom-form input[type="text"],
+.custom-form input[type="number"],
+.custom-form select,
+.custom-form textarea {
+    width: 100%;
+    padding: 12px 15px;
+    margin-bottom: 15px;
+    background: rgba(0, 0, 0, 0.25); /* 深色半透明背景，契合侧边栏的暗紫底色 */
+    border: 1px solid #5a406b;       /* 暗紫色边框 */
+    border-radius: 4px;
+    color: #fff;                     /* 白色输入文字 */
+    font-family: "Noto Serif SC", serif;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+/* 聚焦（点击正在输入）时的暗金发光效果 */
+.custom-form input:focus,
+.custom-form select:focus,
+.custom-form textarea:focus {
+    border-color: var(--accent-gold);
+    outline: none;
+    box-shadow: 0 0 8px rgba(197, 160, 89, 0.4); /* 外发光 */
+    background: rgba(0, 0, 0, 0.4);              /* 背景稍微加深 */
+}
+
+/* 修改占位符 (Placeholder) 提示文字的颜色 */
+.custom-form input::placeholder,
+.custom-form textarea::placeholder {
+    color: #888;
+    font-style: italic;
+}
+
+/* 下拉框点开后的选项底色适配深色模式 */
+.custom-form select option {
+    background: var(--bg-deep-purple);
+    color: #fff;
+}
+
+/* 3. 图标上传按钮 (.file-btn) 优化为高级虚线框 */
+.file-btn {
+    flex: 1;
+    background: rgba(197, 160, 89, 0.05) !important;
+    color: var(--accent-gold) !important;
+    border: 1px dashed var(--accent-gold); /* 金色虚线 */
+    text-align: center;
+    padding: 11px;
+    cursor: pointer;
+    font-family: 'Cinzel', serif;          /* 使用衬线英文字体 */
+    font-size: 13px;
+    letter-spacing: 1px;
+    border-radius: 4px;
+    transition: 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+.file-btn:hover {
+    background: rgba(197, 160, 89, 0.15) !important;
+    text-shadow: 0 0 8px rgba(197, 160, 89, 0.6);
+}
+
+/* 4. 图片预览区增强 */
+.preview-row {
+    background: rgba(0, 0, 0, 0.15);
+    padding: 10px 15px;
+    border-radius: 4px;
+    border: 1px solid #444;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px; /* 图片和文字拉开一点间距 */
+}
+.preview-row img {
+    width: 44px; 
+    height: 44px;
+    border-radius: 50%;
+    border: 2px solid var(--accent-gold); /* 给预览头像加个金边，假装它是角色 Token */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    object-fit: cover;
+    background: #fff; /* 防止透明 PNG 看不清 */
+}
+.preview-row span {
+    color: var(--accent-gold);
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    letter-spacing: 1px;
+}
+
+/* 5. 设置勾选框排版微调 */
+.setup-switch-row {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid #444;
+}
+
+/* 6. 保存大按钮加强 (核心视点) */
+.btn-add-custom {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #d4ac0d, #c5a059); /* 渐变金底色 */
+    color: #111;                      /* 深色文字压住亮底色 */
+    border: none;
+    border-radius: 4px;
+    font-family: 'Cinzel', serif;
+    font-weight: 900;
+    font-size: 16px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    margin-top: 15px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3); /* 初始立体阴影 */
+}
+.btn-add-custom:hover {
+    transform: translateY(-2px);      /* 鼠标悬停时上浮 */
+    box-shadow: 0 6px 15px rgba(197, 160, 89, 0.4); /* 阴影扩大变色 */
+    background: linear-gradient(135deg, #f1c40f, #d4ac0d); /* 变亮 */
+}
+.btn-add-custom:active {
+    transform: translateY(1px);       /* 点击时下压反馈 */
+}
+.custom-form textarea {
+    resize: none;
+}
+
+/* =========================================
+   相克规则区域 (JINXES) 与 弹窗样式
+   ========================================= */
+
+/* 1. 剧本底部的相克规则区块 */
+.jinx-area {
+    margin-top: auto;        /* 自动推到羊皮纸最底部 */
+    padding-top: 30px;
+    position: relative;
+    border-top: none;        /* 移除之前普通的实线 */
+}
+
+/* 带有断点分割线的漂亮标题 */
+.jinx-header {
+    text-align: center;
+    margin-bottom: 25px;
+    position: relative;
+}
+.jinx-header::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 50%;
+    width: 100%; height: 1px;
+    background: rgba(0,0,0,0.15); /* 淡化背景线 */
+    z-index: 0;
+}
+.jinx-title {
+    font-family: 'Cinzel', serif;
+    font-size: 22px;
+    font-weight: 900;
+    color: #b22222;               /* 使用恶魔红突出警戒感 */
+    background: var(--paper-bg);  /* 使用跟背景一样的颜色盖住中间的线 */
+    padding: 0 20px;
+    position: relative;
+    z-index: 1;
+    letter-spacing: 3px;
+}
+
+/* 2. 单条规则列表项排版 */
+/* 给整个列表加一个统一的极细暗红左边线，将所有规则包裹在一起 */
+.jinx-list {
+    border-left: 2px solid rgba(178, 34, 34, 0.4); 
+    padding-left: 10px;
+    margin-left: 10px;
+}
+
+/* 取消单个条目的背景和边框，让它们像自然段落一样排列 */
+.jinx-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 8px; /* 缩小行间距，更紧凑 */
+    padding: 6px 10px;
+    background: transparent; 
+    border: none; 
+    position: relative;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+/* 仅在鼠标悬停时有一点点极弱的反馈，平时完全融入羊皮纸背景 */
+.jinx-item:hover {
+    background: rgba(0,0,0,0.03);
+}
+
+/* 头像连接区：稍微缩小尺寸，配合紧凑的文本 */
+.jinx-icons {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+    padding-top: 2px; /* 微调对齐 */
+}
+.jinx-icons img {
+    width: 28px; /* 从 36px 缩小到 28px，避免喧宾夺主 */
+    height: 28px;
+    border-radius: 50%;
+    filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.3));
+    background: #fff;
+}
+.jinx-cross-icon {
+    font-size: 10px;
+    color: #b22222; 
+    opacity: 0.6;
+}
+
+/* 规则文本 */
+.jinx-text {
+    font-size: 13px; /* 字号适中，像真实的备注小字 */
+    line-height: 1.5;
+    color: #333; /* 字体颜色加深，提升辨识度 */
+    font-weight: 500;
+    padding-top: 6px; 
+    flex: 1;
+}
+
+/* =========================================
+   3. 自定义规则的删除按钮 (悬停显示，告别视觉干扰)
+   ========================================= */
+.jinx-delete {
+    color: #bbb;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 6px;
+    opacity: 0; /* 默认完全透明隐藏 */
+    transition: opacity 0.2s, color 0.2s;
+}
+
+/* 只有鼠标放在当前这一行相克规则上时，垃圾桶才浮现 */
+.jinx-item:hover .jinx-delete {
+    opacity: 1; 
+}
+
+.jinx-delete:hover {
+    color: #c0392b; /* 鼠标放上垃圾桶变红 */
+}
+
+/* 3. 弹窗 UI 样式 */
+.custom-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 10000;
+    display: none; /* JS控制打开时设为flex */
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px); /* 背景磨砂玻璃效果 */
+}
+
+.custom-modal .modal-content {
+    background: var(--bg-deep-purple);
+    width: 420px;
+    border-radius: 6px;
+    border: 1px solid #5a406b;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+    color: #fff;
+    overflow: hidden;
+}
+
+.custom-modal h3 {
+    font-family: 'Cinzel', serif;
+    color: var(--accent-gold);
+    padding: 18px 20px;
+    margin: 0;
+    border-bottom: 1px solid rgba(197, 160, 89, 0.2);
+    text-align: center;
+    font-size: 20px;
+    letter-spacing: 1px;
+}
+
+.custom-modal .modal-body {
+    padding: 25px;
+}
+
+.custom-modal label {
+    display: block;
+    font-family: 'Cinzel', serif;
+    color: #aaa;
+    font-size: 13px;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+}
+
+.custom-modal select, 
+.custom-modal textarea {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 20px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid #5a406b;
+    border-radius: 4px;
+    color: #fff;
+    font-family: "Noto Serif SC", serif;
+    font-size: 14px;
+    outline: none;
+    resize: none;
+}
+
+.custom-modal select:focus, 
+.custom-modal textarea:focus {
+    border-color: var(--accent-gold);
+}
+
+.custom-modal .modal-footer {
+    padding: 15px 25px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    background: rgba(0,0,0,0.2);
+    border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+.custom-modal .btn-cancel, 
+.custom-modal .btn-save {
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Cinzel', serif;
+    font-weight: bold;
+    font-size: 14px;
+    border: none;
+    transition: 0.2s;
+}
+
+.custom-modal .btn-cancel {
+    background: transparent;
+    color: #bbb;
+    border: 1px solid #666;
+}
+.custom-modal .btn-cancel:hover {
+    background: #333;
+    color: #fff;
+}
+
+.custom-modal .btn-save {
+    background: linear-gradient(135deg, #d4ac0d, #c5a059);
+    color: #111;
+}
+.custom-modal .btn-save:hover {
+    background: linear-gradient(135deg, #f1c40f, #d4ac0d);
+    box-shadow: 0 0 10px rgba(197, 160, 89, 0.4);
+}
